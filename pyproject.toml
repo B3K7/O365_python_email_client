@@ -1,0 +1,66 @@
+[project]
+name    = "O365_python_email_client"
+version = "0.0.3"
+authors = [
+  { name="Brent Kimberley", email=brent.kimberley77@gmail.com },
+]
+description = "A Python Exchange Online email client package"
+#"BSD 2-clause"
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    # How mature is this project? Common values are
+    #   3 - Alpha
+    #   4 - Beta
+    #   5 - Production/Stable
+    "Development Status :: 1 - Planning",
+    "Environment :: Web Environment",
+    "Environment :: Other Environment",
+    # Indicate who your project is intended for
+    "Intended Audience :: Customer Service",
+    "Intended Audience :: Education",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Legal Industry",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Other Audience",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Telecommunications Industry",
+    "Topic :: Security",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Communications :: File Sharing",
+    "Topic :: Communications :: Email",
+    "Topic :: Communications :: Email :: Email Clients (MUA)",
+    # Pick your license as you wish (see also "license" above)
+    "License :: OSI Approved :: BSD License",
+    # Specify the targets here.
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    # Specify the Python versions you support here.
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+    'click',
+    'msal',
+    'requests',
+    'pyjwt',
+    'asn1crypto',
+]
+keywords=["MSAL", "email client", "HTTPS client", "MUA", "JWT", "Azure", "Exchange Online"]
+
+[project.urls]
+Documentation = https://readthedocs.org
+Repository = https://github.com/B3K7/O365_python_email_client.git
+Issues = https://github.com/B3K7/O365_python_email_client/issues
+Changelog = https://github.com/B3K7/O365_python_email_client/blob/master/CHANGELOG.md
+
+[project.scripts]
+send_email_via_O365 = "O365_python_email_client.send_email_via_O365:send_email_via_O365"

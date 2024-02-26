@@ -11,5 +11,6 @@ git config --global user.signingkey "signinkey"
 git tag -u keyid
 git commit -S keyid
 git merge -S keyid
+export GPG_TTY=$(tty)
 ```
  

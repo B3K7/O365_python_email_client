@@ -215,3 +215,4 @@ def send_email_via_O365(passphrase_file, from_user, to, cc, bcc, replyto, body_f
         print(jwt_token.get("correlation_id"))  # You may need this when reporting a bug
 
 if __name__ == "__main__":
+    send_email_via_O365()

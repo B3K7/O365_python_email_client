@@ -2,7 +2,7 @@
 name    = "O365_python_email_client"
 version = "0.0.3"
 authors = [
-  { name="Brent Kimberley", email=brent.kimberley77@gmail.com },
+  { name="Brent Kimberley", email="brent.kimberley77@gmail.com" },
 ]
 description = "A Python Exchange Online email client package"
 #"BSD 2-clause"

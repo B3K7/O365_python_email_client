@@ -68,7 +68,7 @@ def acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file):
           ,'public_certificate' : pub_pem.decode('utf-8')
         }
 
-    authority_url = fhttps://login.microsoftonline.com/{tenant_id}
+    authority_url = f"https://login.microsoftonline.com/{tenant_id}"
 
     app = msal.ConfidentialClientApplication(
        client_id         = client_id
@@ -77,7 +77,7 @@ def acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file):
     )
 
     # https://docs.microsoft.com/en-us/python/api/msal/msal.application.confidentialclientapplication?view=azure-python
-    jwt_token = app.acquire_token_for_client(scopes=[https://graph.microsoft.com/.default])
+    jwt_token = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
     return jwt_token
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------

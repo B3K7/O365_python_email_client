@@ -1,6 +1,6 @@
 [project]
 name    = "O365_python_email_client"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Brent Kimberley", email="brent.kimberley77@gmail.com" },
 ]

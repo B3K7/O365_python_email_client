@@ -30,16 +30,19 @@ def acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file):
     ###
 
     with open(azure_ad_file, 'r') as fd_az, \
-            open(passphrase_file, 'r') as fd_pass, \
             open(keyfile,'r') as fd_priv, \
             open(pubfile,'rb') as fd_pub:
         pub_pem  = fd_pub.read()
         priv_pem = fd_priv.read()
-        passphrase = fd_pass.read()
         azure_ad   = json.loads(fd_az.read())
         #{appclientID:appclientID,tenantID:tenantID}
         client_id  = azure_ad['appclientID']
         tenant_id  = azure_ad['tenantID']
+
+    passphrase = None
+    if passphrase_file:
+        with open(passphrase_file, 'r') as fd_pass:
+            passphrase = fd_pass.read()
 
     type_name, headers, pub_der = pem.unarmor(pub_pem)
     pub_cert = x509.Certificate.load(pub_der)

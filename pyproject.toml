@@ -63,4 +63,4 @@ Issues        = "https://github.com/B3K7/O365_python_email_client/issues"
 Changelog     = "https://github.com/B3K7/O365_python_email_client/blob/master/CHANGELOG.md"
 
 [project.scripts]
-send_email_via_O365 = "O365_python_email_client.send_email_via_O365:send_email_via_o365"
+send_email_via_O365 = "O365_python_email_client.send_email_via_o365:send_email_via_o365"

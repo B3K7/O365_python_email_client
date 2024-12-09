@@ -38,7 +38,7 @@ def acquire_jwt_token(azure_ad_file, debug):
         tenant_id  = azure_ad['tenantID']
 
         if 'pubfile' in azure_ad:
-            with open(azure_ad['pubfile'],'rb', encoding='utf-8') as fd_pub:
+            with open(azure_ad['pubfile'],'rb') as fd_pub:
                 pub_pem  = fd_pub.read()
             type_name, headers, pub_der = pem.unarmor(pub_pem)
             pub_cert = x509.Certificate.load(pub_der)

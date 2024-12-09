@@ -5,55 +5,56 @@
 
 """ Send email via O365 """
 
-import click
-import msal
+import os
 import base64
+import json
+import hashlib
 import requests
 import jwt
-import json
-import os
+import click
+import msal
 from   asn1crypto import pem, x509
-import hashlib
 
-def base64UrlDecode(base64Url):
-    padding = '=' * (4 - (len(base64Url) % 4))
-    return base64.urlsafe_b64decode(base64Url + padding)
-
-def acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file):
+def acquire_jwt_token(azure_ad_file, debug):
     """
     Acquire jwt_token using MSAL API
     """
 
     ############
-    # TODO Verify that we are communicating with Microsoft
+    # Verify that we are communicating with Microsoft
     # https://gist.github.com/dlenski/fc42156c00a615f4aa18a6d19d67e208
     ###
 
-    with open(azure_ad_file, 'r') as fd_az, \
-            open(keyfile,'r') as fd_priv, \
-            open(pubfile,'rb') as fd_pub:
-        pub_pem  = fd_pub.read()
-        priv_pem = fd_priv.read()
-        azure_ad   = json.loads(fd_az.read())
+    azure_ad = None
+    priv_pem = None
+    pub_cert = None
+    passphrase = None
+    client_id = None
+    tenant_id = None
+    with open(azure_ad_file, 'r', encoding='utf-8') as fd_az:
+        azure_ad   = json.load(fd_az)
         #{appclientID:appclientID,tenantID:tenantID}
         client_id  = azure_ad['appclientID']
         tenant_id  = azure_ad['tenantID']
 
-    passphrase = None
-    if passphrase_file:
-        with open(passphrase_file, 'r') as fd_pass:
-            passphrase = fd_pass.read()
+        if 'pubfile' in azure_ad:
+            with open(azure_ad['pubfile'],'rb', endoding='utf-8') as fd_pub:
+                pub_pem  = fd_pub.read()
+            type_name, headers, pub_der = pem.unarmor(pub_pem)
+            pub_cert = x509.Certificate.load(pub_der)
 
-    type_name, headers, pub_der = pem.unarmor(pub_pem)
-    pub_cert = x509.Certificate.load(pub_der)
-    #print (hashlib.sha1(pub_cert.dump()).digest().hex().upper())
-    #print(type_name)
-    #print(headers)
-    #print(pub_cert.signature_algo)
- 
-    #print(hashlib.sha1(pub_cert.dump()).digest().hex().upper())
-    #print('020D3C83E30502A794B847E4F71EFEE57700C29B')
-    #print('Verify that the above match')
+        if 'passphrase' in azure_ad:
+            passphrase = azure_ad['passphrase']
+
+        if 'passphrasefile' in azure_ad:
+            with open(azure_ad['passphrase_file'], 'r', encoding='utf-8') as fd_pass:
+                passphrase = fd_pass.read()
+
+
+        if 'keyfile' in azure_ad:
+            with open(azure_ad['keyfile'],'r', encoding='utf-8') as fd_priv:
+                priv_pem = fd_priv.read()
+
 
     my_cred = None
 
@@ -72,6 +73,8 @@ def acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file):
         }
 
     authority_url = f"https://login.microsoftonline.com/{tenant_id}"
+    if debug:
+        print(authority_url)
 
     app = msal.ConfidentialClientApplication(
        client_id         = client_id
@@ -84,13 +87,8 @@ def acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file):
     return jwt_token
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------
-#todo Consider creating a consolidated credentials file
 @click.command()
 @click.option( "--azure_ad_file",         default=None,                                   help='JSON file {appclientID:appclientID,tenantID:tenantID}')
-# ---------------------------------------------------------------------------------------------------------------------------------------------
-@click.option( "--passphrase_file",       default=None, hide_input=True,                  help='private key passphrase file')
-@click.option( "--keyfile",               default=None,                                   help='pem key filename')
-@click.option( "--pubfile",               default=None,                                   help='pem pub filename')
 # ---------------------------------------------------------------------------------------------------------------------------------------------
 @click.option( "--debug/--no-debug",      default=None,                                   help='debug flag')
 # ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,7 +104,11 @@ def acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file):
 @click.option( "--content_type",          default='Text',                                 help='content type')
 @click.option( "--importance", "-i",      default="normal",                               help='message importance (high, normal, low)')
 # ---------------------------------------------------------------------------------------------------------------------------------------------
-def send_email_via_O365(passphrase_file, from_user, to, cc, bcc, replyto, body_file, body,  subject_line, content_type, debug, attachment_file, keyfile, pubfile, azure_ad_file, importance):
+def send_email_via_o365(from_user=None, to=None, cc=None, bcc=None, \
+                        replyto=None, body_file=None, body=None, \
+                        subject_line=None, content_type=None, debug=None, \
+                        attachment_file=None, azure_ad_file=None,  \
+                        importance=None):
     """
     A 'quick and dirty' Exchange Online Email client\n
     """
@@ -116,13 +118,13 @@ def send_email_via_O365(passphrase_file, from_user, to, cc, bcc, replyto, body_f
     # office-exchange-online (https://learn.microsoft.com/en-us/exchange/exchange-online)
     # REST grammar https://docs.microsoft.com/en-us/graph/api/resources/message?view=graph-rest-1.0
 
-    if keyfile is None or pubfile is None or azure_ad_file is None:
+    if azure_ad_file is None:
         ctx = click.get_current_context()
         click.echo(ctx.get_help())
         ctx.exit()
         exit(-1)
 
-    jwt_token = acquire_jwt_token(keyfile, pubfile, passphrase_file, azure_ad_file)
+    jwt_token = acquire_jwt_token(azure_ad_file, debug)
 
     if "access_token" in jwt_token:
         if debug is not None:
@@ -135,11 +137,11 @@ def send_email_via_O365(passphrase_file, from_user, to, cc, bcc, replyto, body_f
         access_token = jwt_token['access_token']
         endpoint = f'https://graph.microsoft.com/v1.0/users/{userId}/SendMail'
 
-        message = dict()
+        message = {}
 
         if body_file is not None:
             if os.path.isfile(body_file):
-                with open(body_file, 'r') as f:
+                with open(body_file, 'r', encoding='utf-8') as f:
                     body = f.read()
 
         if subject_line is not None:
@@ -205,7 +207,7 @@ def send_email_via_O365(passphrase_file, from_user, to, cc, bcc, replyto, body_f
           print(json.dumps(email_msg))
           print()
 
-        r = requests.post(endpoint, headers={'Authorization' : 'Bearer ' + access_token}, json=email_msg)
+        r = requests.post(endpoint, headers={'Authorization' : 'Bearer ' + access_token}, json=email_msg, timeout=3)
 
         if r.ok:
             print('Email sent successfully')
@@ -218,4 +220,4 @@ def send_email_via_O365(passphrase_file, from_user, to, cc, bcc, replyto, body_f
         print(jwt_token.get("correlation_id"))  # You may need this when reporting a bug
 
 if __name__ == "__main__":
-    send_email_via_O365()
+    send_email_via_o365()
